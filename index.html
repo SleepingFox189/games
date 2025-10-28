@@ -398,6 +398,48 @@
       animation:float 4s ease-in-out infinite;
       letter-spacing:-1px
     }
+
+    .import-popup{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.95);
+      backdrop-filter:blur(20px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:10000;
+      visibility:hidden;
+      opacity:0;
+      transition:all .4s ease
+    }
+
+    .import-popup.show{visibility:visible;opacity:1}
+
+    .import-popup-content{
+      background:linear-gradient(135deg,#000000 0%,#001a33 100%);
+      border:3px solid rgba(30,144,255,.5);
+      border-radius:25px;
+      padding:40px 50px;
+      text-align:center;
+      box-shadow:0 40px 80px rgba(0,0,0,.9),0 0 100px var(--accent-glow);
+      animation:pulse 2s ease-in-out infinite
+    }
+
+    .import-popup-content h3{
+      font-size:28px;
+      font-family:'Space Grotesk',sans-serif;
+      background:linear-gradient(135deg,#00bfff 0%,#1e90ff 50%,#0047ab 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+      margin-bottom:20px
+    }
+
+    .import-popup-content p{
+      font-size:16px;
+      color:var(--muted);
+      line-height:1.6
+    }
     
     @media (max-width:768px){
       .card{height:220px;grid-column:span 1}
@@ -407,6 +449,8 @@
       h2{font-size:28px}
       .controls{gap:8px}
       .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px}
+      .import-popup-content{padding:30px 40px}
+      .import-popup-content h3{font-size:22px}
     }
   </style>
 </head>
@@ -415,6 +459,13 @@
     <div class="loading-content">
       <div class="loading-title">Thank You For Purchasing</div>
       <div class="loading-spinner"></div>
+    </div>
+  </div>
+
+  <div id="importPopup" class="import-popup">
+    <div class="import-popup-content">
+      <h3>✅ Success!</h3>
+      <p id="importMessage">Data imported successfully! Please log back in with your key.<br><br>Closing tab in <span id="countdown">5</span> seconds...</p>
     </div>
   </div>
 
@@ -455,7 +506,7 @@
           <button id="closeModal" class="btn small" style="background:#1a1a1a">Close</button>
         </div>
       </header>
-      <div class="iframe-wrap">
+      <div class="iframe-wrap" id="iframeWrap">
         <iframe id="gameFrame" src="about:blank" sandbox="allow-scripts allow-forms allow-pointer-lock allow-same-origin"></iframe>
       </div>
     </div>
@@ -475,10 +526,14 @@
     const exportBtn=document.getElementById('exportBtn');
     const importBtn=document.getElementById('importBtn');
     const importFile=document.getElementById('importFile');
+    const importPopup=document.getElementById('importPopup');
+    const importMessage=document.getElementById('importMessage');
+    const countdown=document.getElementById('countdown');
     const modalBackdrop=document.getElementById('modalBackdrop');
     const modalTitle=document.getElementById('modalTitle');
     const modalMeta=document.getElementById('modalMeta');
     const gameFrame=document.getElementById('gameFrame');
+    const iframeWrap=document.getElementById('iframeWrap');
     const closeModal=document.getElementById('closeModal');
     const fullscreenBtn=document.getElementById('fullscreenBtn');
 
@@ -593,10 +648,19 @@
 
     fullscreenBtn.addEventListener('click',()=>{
       try{
-        if(gameFrame.requestFullscreen)gameFrame.requestFullscreen();
-        else if(gameFrame.webkitRequestFullscreen)gameFrame.webkitRequestFullscreen();
-        else if(gameFrame.mozRequestFullScreen)gameFrame.mozRequestFullScreen();
-      }catch(e){console.warn('Fullscreen not supported',e)}
+        const elem=iframeWrap;
+        if(elem.requestFullscreen){
+          elem.requestFullscreen();
+        }else if(elem.webkitRequestFullscreen){
+          elem.webkitRequestFullscreen();
+        }else if(elem.mozRequestFullScreen){
+          elem.mozRequestFullScreen();
+        }else if(elem.msRequestFullscreen){
+          elem.msRequestFullscreen();
+        }
+      }catch(e){
+        console.warn('Fullscreen not supported',e);
+      }
     });
 
     searchEl.addEventListener('input',debounce(filterZones,250));
@@ -628,7 +692,6 @@
     }
 
     async function saveData(){
-      alert("Exporting all site data. This may take a moment.");
       const result={};
       result.cookies=document.cookie;
       result.localStorage={...localStorage};
@@ -671,9 +734,8 @@
       }catch(e){
         console.error("IndexedDB export failed:",e);
       }
-      alert("Export complete. Your download will begin now.");
       const link=document.createElement("a");
-      link.href=URL.createObjectURL(new Blob([JSON.stringify(result)],{type:"application/octet-stream"}));
+      link.href=URL.createObjectURL(new Blob([JSON.stringify(result)],{type:"application/json"}));
       link.download=`site-data-${Date.now()}.json`;
       document.body.appendChild(link);
       link.click();
@@ -737,8 +799,19 @@
               request.onerror=()=>reject(request.error);
             }
           }
-          alert("Data imported successfully! Please log back in with your key.");
-          window.close();
+          
+          importPopup.classList.add('show');
+          let seconds=5;
+          countdown.textContent=seconds;
+          const timer=setInterval(()=>{
+            seconds--;
+            countdown.textContent=seconds;
+            if(seconds<=0){
+              clearInterval(timer);
+              window.close();
+            }
+          },1000);
+          
         }catch(err){
           alert(`Failed to load data: ${err.message}`);
         }
