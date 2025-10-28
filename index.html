@@ -974,19 +974,50 @@
 
     fullscreenBtn.addEventListener('click',async()=>{
       try{
-        const elem=document.documentElement;
-        if(elem.requestFullscreen){
-          await elem.requestFullscreen();
-        }else if(elem.webkitRequestFullscreen){
-          await elem.webkitRequestFullscreen();
-        }else if(elem.mozRequestFullScreen){
-          await elem.mozRequestFullScreen();
-        }else if(elem.msRequestFullscreen){
-          await elem.msRequestFullscreen();
-        }
+        const modal=document.querySelector('.modal');
+        modal.style.position='fixed';
+        modal.style.inset='0';
+        modal.style.width='100vw';
+        modal.style.height='100vh';
+        modal.style.maxWidth='none';
+        modal.style.borderRadius='0';
+        modal.style.transform='none';
+        modalBackdrop.style.padding='0';
+        
+        const modalHeader=modal.querySelector('header');
+        modalHeader.style.position='absolute';
+        modalHeader.style.top='0';
+        modalHeader.style.left='0';
+        modalHeader.style.right='0';
+        modalHeader.style.zIndex='1000';
+        modalHeader.style.opacity='0';
+        modalHeader.style.transition='opacity 0.3s ease';
+        
+        modal.addEventListener('mousemove',()=>{
+          modalHeader.style.opacity='1';
+          clearTimeout(modal.hideHeaderTimeout);
+          modal.hideHeaderTimeout=setTimeout(()=>{
+            modalHeader.style.opacity='0';
+          },2000);
+        });
+        
+        fullscreenBtn.textContent='Exit Fullscreen';
+        fullscreenBtn.onclick=()=>{
+          modal.style.position='';
+          modal.style.inset='';
+          modal.style.width='';
+          modal.style.height='';
+          modal.style.maxWidth='';
+          modal.style.borderRadius='';
+          modal.style.transform='';
+          modalBackdrop.style.padding='';
+          modalHeader.style.position='';
+          modalHeader.style.opacity='';
+          fullscreenBtn.textContent='Fullscreen';
+          fullscreenBtn.onclick=null;
+        };
       }catch(e){
         console.warn('Fullscreen error:',e);
-        alert('Fullscreen is not available in this environment. The game is already maximized in the modal.');
       }
     });
 
