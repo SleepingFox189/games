@@ -972,20 +972,21 @@
     closeModal.addEventListener('click',hideModal);
     modalBackdrop.addEventListener('click',(ev)=>{if(ev.target===modalBackdrop)hideModal()});
 
-    fullscreenBtn.addEventListener('click',()=>{
+    fullscreenBtn.addEventListener('click',async()=>{
       try{
-        const elem=iframeWrap;
+        const elem=document.documentElement;
         if(elem.requestFullscreen){
-          elem.requestFullscreen();
+          await elem.requestFullscreen();
         }else if(elem.webkitRequestFullscreen){
-          elem.webkitRequestFullscreen();
+          await elem.webkitRequestFullscreen();
         }else if(elem.mozRequestFullScreen){
-          elem.mozRequestFullScreen();
+          await elem.mozRequestFullScreen();
         }else if(elem.msRequestFullscreen){
-          elem.msRequestFullscreen();
+          await elem.msRequestFullscreen();
         }
       }catch(e){
-        console.warn('Fullscreen not supported',e);
+        console.warn('Fullscreen error:',e);
+        alert('Fullscreen is not available in this environment. The game is already maximized in the modal.');
       }
     });
 
