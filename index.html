@@ -1,0 +1,758 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Games Launcher - Paid Version</title>
+  <meta name="description" content="Premium games launcher" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#000000;
+      --card:#0a0a0f;
+      --muted:#8b92a8;
+      --accent:#1e90ff;
+      --accent-glow:rgba(30,144,255,0.4);
+      --blue:#00bfff;
+      --dark-blue:#0047ab;
+    }
+    
+    *{box-sizing:border-box;margin:0;padding:0}
+    
+    @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes shimmer{0%{background-position:-1000px 0}100%{background-position:1000px 0}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    @keyframes glow{0%,100%{box-shadow:0 0 20px var(--accent-glow)}50%{box-shadow:0 0 40px var(--accent-glow),0 0 60px var(--accent-glow)}}
+    @keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes gradientShift{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
+    @keyframes rotate{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    
+    .loading-screen{
+      position:fixed;
+      inset:0;
+      background:linear-gradient(135deg,#000000 0%,#001a33 50%,#000000 100%);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      transition:opacity .8s ease,visibility .8s ease
+    }
+    
+    .loading-screen.hidden{opacity:0;visibility:hidden}
+    .loading-content{text-align:center;animation:fadeIn 1s ease}
+    
+    .loading-title{
+      font-size:48px;
+      font-weight:700;
+      font-family:'Space Grotesk',sans-serif;
+      background:linear-gradient(135deg,#00bfff 0%,#1e90ff 50%,#0047ab 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+      margin-bottom:20px;
+      animation:pulse 2s ease-in-out infinite;
+      letter-spacing:-1px
+    }
+    
+    .loading-spinner{
+      width:60px;
+      height:60px;
+      border:4px solid rgba(30,144,255,.2);
+      border-top-color:var(--accent);
+      border-radius:50%;
+      animation:spin 1s linear infinite;
+      margin:30px auto
+    }
+    
+    body{
+      margin:0;
+      font-family:'Inter',system-ui,-apple-system,sans-serif;
+      background:linear-gradient(135deg,#000000 0%,#001a33 25%,#000d1a 50%,#001a33 75%,#000000 100%);
+      background-size:400% 400%;
+      animation:gradientShift 20s ease infinite;
+      color:#f0f4f8;
+      min-height:100vh;
+      position:relative;
+      overflow-x:hidden
+    }
+    
+    body::before{
+      content:'';
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background-image:radial-gradient(circle at 20% 30%,rgba(30,144,255,.15) 0%,transparent 50%),radial-gradient(circle at 80% 70%,rgba(0,191,255,.1) 0%,transparent 50%),radial-gradient(circle at 50% 50%,rgba(0,71,171,.08) 0%,transparent 50%);
+      pointer-events:none;
+      z-index:0
+    }
+    
+    body::after{
+      content:'';
+      position:fixed;
+      top:-50%;
+      left:-50%;
+      width:200%;
+      height:200%;
+      background:radial-gradient(circle at 25% 25%,rgba(30,144,255,.1) 0%,transparent 25%),radial-gradient(circle at 75% 75%,rgba(0,191,255,.08) 0%,transparent 25%);
+      animation:rotate 30s linear infinite;
+      pointer-events:none;
+      z-index:0
+    }
+    
+    header{
+      padding:24px 30px;
+      border-bottom:1px solid rgba(30,144,255,.2);
+      backdrop-filter:blur(10px);
+      background:rgba(0,10,20,.6);
+      display:flex;
+      gap:16px;
+      align-items:center;
+      position:relative;
+      z-index:10;
+      animation:slideUp .8s ease
+    }
+    
+    header::after{
+      content:'';
+      position:absolute;
+      bottom:-1px;
+      left:0;
+      width:100%;
+      height:2px;
+      background:linear-gradient(90deg,transparent,var(--accent),var(--blue),transparent);
+      animation:shimmer 3s linear infinite
+    }
+    
+    .badge{
+      display:inline-block;
+      padding:8px 18px;
+      background:linear-gradient(135deg,var(--dark-blue),var(--accent),var(--blue));
+      color:#fff;
+      border-radius:25px;
+      font-size:13px;
+      font-weight:700;
+      text-transform:uppercase;
+      letter-spacing:1.2px;
+      animation:glow 3s ease-in-out infinite;
+      box-shadow:0 4px 15px rgba(30,144,255,.3);
+      font-family:'Space Grotesk',sans-serif
+    }
+    
+    .made-by{
+      margin-left:auto;
+      font-size:15px;
+      color:var(--muted);
+      padding:10px 20px;
+      border-radius:10px;
+      background:rgba(30,144,255,.1);
+      backdrop-filter:blur(5px);
+      border:1px solid rgba(30,144,255,.3);
+      transition:all .4s cubic-bezier(.4,0,.2,1);
+      font-weight:500
+    }
+    
+    .made-by:hover{
+      background:rgba(30,144,255,.2);
+      transform:translateY(-2px);
+      box-shadow:0 8px 20px rgba(30,144,255,.4);
+      border-color:var(--accent)
+    }
+    
+    .made-by strong{color:var(--blue);font-weight:700}
+    
+    .container{
+      max-width:1280px;
+      margin:30px auto;
+      padding:0 30px;
+      position:relative;
+      z-index:1;
+      animation:fadeIn 1s ease .3s both
+    }
+    
+    .controls{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-bottom:30px;
+      animation:fadeIn 1s ease .5s both;
+      flex-wrap:wrap
+    }
+    
+    input[type="search"]{
+      flex:1;
+      min-width:200px;
+      padding:16px 24px;
+      border-radius:15px;
+      border:2px solid rgba(30,144,255,.3);
+      background:rgba(0,10,20,.7);
+      backdrop-filter:blur(10px);
+      color:#fff;
+      font-size:15px;
+      font-weight:500;
+      transition:all .4s cubic-bezier(.4,0,.2,1)
+    }
+    
+    input[type="search"]:focus{
+      outline:none;
+      border-color:var(--accent);
+      box-shadow:0 0 30px var(--accent-glow),0 0 60px rgba(30,144,255,.2);
+      transform:translateY(-2px);
+      background:rgba(0,15,30,.8)
+    }
+    
+    input[type="search"]::placeholder{color:#4a5568;font-weight:400}
+    
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+      gap:24px
+    }
+    
+    .card{
+      background:linear-gradient(135deg,rgba(0,10,20,.9) 0%,rgba(0,26,51,.8) 100%);
+      border:2px solid rgba(30,144,255,.2);
+      border-radius:20px;
+      overflow:hidden;
+      position:relative;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      height:260px;
+      transition:all .5s cubic-bezier(.175,.885,.32,1.275);
+      animation:fadeIn .4s ease both
+    }
+    
+    .card::before{
+      content:'';
+      position:absolute;
+      inset:-3px;
+      background:linear-gradient(135deg,var(--dark-blue),var(--accent),var(--blue));
+      border-radius:20px;
+      opacity:0;
+      transition:opacity .5s ease;
+      z-index:-1;
+      filter:blur(10px)
+    }
+    
+    .card:hover::before{opacity:.8}
+    
+    .card:hover{
+      transform:translateY(-12px) scale(1.03);
+      box-shadow:0 25px 50px rgba(0,0,0,.8),0 0 50px var(--accent-glow);
+      border-color:var(--blue)
+    }
+    
+    .card img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      transition:transform .5s ease
+    }
+    
+    .card:hover img{transform:scale(1.15)}
+    
+    .card .label{
+      position:absolute;
+      left:0;
+      right:0;
+      bottom:0;
+      padding:16px 18px;
+      background:linear-gradient(180deg,transparent,rgba(0,0,0,.95));
+      font-size:15px;
+      font-weight:700;
+      transition:all .4s ease;
+      color:#fff;
+      letter-spacing:.3px
+    }
+    
+    .card:hover .label{
+      background:linear-gradient(180deg,transparent,rgba(0,26,51,.98));
+      padding-bottom:20px;
+      color:var(--blue)
+    }
+    
+    .meta{font-size:13px;color:var(--muted);padding:8px 0 0}
+    .center{text-align:center}
+    
+    .modal-backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.92);
+      backdrop-filter:blur(15px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      z-index:999;
+      visibility:hidden;
+      opacity:0;
+      transition:all .4s ease
+    }
+    
+    .modal-backdrop.show{visibility:visible;opacity:1}
+    
+    .modal{
+      width:100%;
+      max-width:1100px;
+      height:80vh;
+      background:linear-gradient(135deg,#000000 0%,#001a33 100%);
+      border-radius:25px;
+      border:3px solid rgba(30,144,255,.4);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      transform:scale(.85);
+      transition:transform .4s ease;
+      box-shadow:0 40px 80px rgba(0,0,0,.9),0 0 100px var(--accent-glow)
+    }
+    
+    .modal-backdrop.show .modal{transform:scale(1)}
+    
+    .modal header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:20px 26px;
+      border-bottom:2px solid rgba(30,144,255,.3);
+      background:rgba(0,10,20,.7);
+      backdrop-filter:blur(10px)
+    }
+    
+    .modal-title{font-weight:700;font-size:18px;letter-spacing:.3px}
+    .modal .iframe-wrap{flex:1;background:#000;position:relative;overflow:hidden}
+    iframe{width:100%;height:100%;border:0}
+    
+    .btn{
+      background:linear-gradient(135deg,var(--dark-blue),var(--accent),var(--blue));
+      color:#fff;
+      padding:12px 22px;
+      border-radius:12px;
+      border:0;
+      cursor:pointer;
+      font-weight:700;
+      font-size:14px;
+      transition:all .4s cubic-bezier(.4,0,.2,1);
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 4px 15px rgba(30,144,255,.3);
+      letter-spacing:.5px
+    }
+    
+    .btn::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:linear-gradient(135deg,transparent,rgba(255,255,255,.3));
+      transform:translateX(-100%);
+      transition:transform .4s ease
+    }
+    
+    .btn:hover::before{transform:translateX(100%)}
+    .btn:hover{transform:translateY(-3px);box-shadow:0 10px 25px var(--accent-glow)}
+    .btn:active{transform:translateY(0)}
+    
+    .btn.ghost{
+      background:rgba(30,144,255,.15);
+      border:2px solid rgba(30,144,255,.4);
+      color:#fff
+    }
+    
+    .btn.ghost:hover{
+      background:rgba(30,144,255,.3);
+      border-color:var(--blue)
+    }
+    
+    .small{padding:10px 18px;font-size:13px;border-radius:10px}
+    
+    .footer{
+      margin-top:50px;
+      padding:28px;
+      color:var(--muted);
+      font-size:14px;
+      text-align:center;
+      background:rgba(0,10,20,.5);
+      border-radius:15px;
+      border:1px solid rgba(30,144,255,.2);
+      animation:fadeIn 1.2s ease .8s both;
+      backdrop-filter:blur(10px);
+      line-height:1.7
+    }
+    
+    h2{
+      margin:0 0 28px 0;
+      font-size:36px;
+      font-weight:800;
+      font-family:'Space Grotesk',sans-serif;
+      background:linear-gradient(135deg,#00bfff 0%,#1e90ff 50%,#0047ab 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+      animation:float 4s ease-in-out infinite;
+      letter-spacing:-1px
+    }
+    
+    @media (max-width:768px){
+      .card{height:220px;grid-column:span 1}
+      .container{padding:0 20px}
+      .made-by{font-size:12px;padding:8px 14px}
+      .loading-title{font-size:28px}
+      h2{font-size:28px}
+      .controls{gap:8px}
+      .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px}
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingScreen" class="loading-screen">
+    <div class="loading-content">
+      <div class="loading-title">Thank You For Purchasing</div>
+      <div class="loading-spinner"></div>
+    </div>
+  </div>
+
+  <header>
+    <span class="badge">Paid Version</span>
+    <div class="made-by">Made By <strong>Cavan</strong></div>
+  </header>
+
+  <main class="container">
+    <div class="controls">
+      <input id="search" type="search" placeholder="🔍 Search games..." />
+      <button id="refreshBtn" class="btn small">Refresh</button>
+      <button id="exportBtn" class="btn small ghost">Export Data</button>
+      <button id="importBtn" class="btn small ghost">Import Data</button>
+      <input type="file" id="importFile" style="display:none" accept=".json">
+    </div>
+
+    <section>
+      <h2>🎮 Games Collection</h2>
+      <div id="gamesGrid" class="grid" aria-live="polite"></div>
+      <div id="noResults" class="center meta" style="display:none;margin-top:28px">No games found.</div>
+    </section>
+
+    <div class="footer">
+      💡 <strong>Tip:</strong> Click a card to open the game in the modal. Use fullscreen for the best experience.
+    </div>
+  </main>
+
+  <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-hidden="true">
+    <div class="modal" role="document">
+      <header>
+        <div style="display:flex;gap:12px;align-items:center">
+          <strong id="modalTitle" class="modal-title">Loading…</strong>
+          <span id="modalMeta" style="color:#8b92a8;font-size:13px"></span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button id="fullscreenBtn" class="btn small">Fullscreen</button>
+          <button id="closeModal" class="btn small" style="background:#1a1a1a">Close</button>
+        </div>
+      </header>
+      <div class="iframe-wrap">
+        <iframe id="gameFrame" src="about:blank" sandbox="allow-scripts allow-forms allow-pointer-lock allow-same-origin"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('load',()=>{setTimeout(()=>{document.getElementById('loadingScreen').classList.add('hidden')},2500)});
+
+    const ZONES_JSON_URL="https://cdn.jsdelivr.net/gh/gn-math/assets@main/zones.json";
+    const COVERS_BASE_URL="https://cdn.jsdelivr.net/gh/gn-math/covers@main";
+    const HTML_BASE_URL="https://cdn.jsdelivr.net/gh/gn-math/html@main";
+
+    const searchEl=document.getElementById('search');
+    const grid=document.getElementById('gamesGrid');
+    const noResults=document.getElementById('noResults');
+    const refreshBtn=document.getElementById('refreshBtn');
+    const exportBtn=document.getElementById('exportBtn');
+    const importBtn=document.getElementById('importBtn');
+    const importFile=document.getElementById('importFile');
+    const modalBackdrop=document.getElementById('modalBackdrop');
+    const modalTitle=document.getElementById('modalTitle');
+    const modalMeta=document.getElementById('modalMeta');
+    const gameFrame=document.getElementById('gameFrame');
+    const closeModal=document.getElementById('closeModal');
+    const fullscreenBtn=document.getElementById('fullscreenBtn');
+
+    let zones=[];
+    let currentZone=null;
+
+    function createCard(game,index){
+      const a=document.createElement('div');
+      a.className='card';
+      a.title=game.name;
+      a.dataset.id=game.id;
+      a.style.setProperty('--i',index);
+      const cover=(game.cover||'').replace("{COVER_URL}",COVERS_BASE_URL).replace("{HTML_URL}",HTML_BASE_URL);
+      const img=document.createElement('img');
+      img.src=cover;
+      img.alt=game.name;
+      img.loading='lazy';
+      const label=document.createElement('div');
+      label.className='label';
+      label.textContent=game.name;
+      a.appendChild(img);
+      a.appendChild(label);
+      a.addEventListener('click',()=>openGame(game));
+      return a;
+    }
+
+    async function fetchZones(){
+      grid.innerHTML='';
+      noResults.style.display='none';
+      try{
+        const res=await fetch(`${ZONES_JSON_URL}?t=${Date.now()}`);
+        if(!res.ok)throw new Error('Failed to fetch zones.json');
+        const all=await res.json();
+        zones=all.filter(z=>String(z.id)!=='-1');
+        renderZones(zones);
+      }catch(err){
+        console.error('Error loading zones.json',err);
+        grid.innerHTML='<div class="meta center">Failed to load games list. Check console for details.</div>';
+      }
+    }
+
+    function renderZones(list){
+      grid.innerHTML='';
+      if(!list||list.length===0){
+        noResults.style.display='block';
+        return;
+      }
+      const frag=document.createDocumentFragment();
+      list.forEach((game,index)=>frag.appendChild(createCard(game,index)));
+      grid.appendChild(frag);
+    }
+
+    function filterZones(){
+      const q=(searchEl.value||'').toLowerCase().trim();
+      if(!q){
+        renderZones(zones);
+        return;
+      }
+      const results=zones.filter(g=>(g.name||'').toLowerCase().includes(q));
+      renderZones(results);
+      if(!results.length)noResults.style.display='block';else noResults.style.display='none';
+    }
+
+    async function openGame(zone){
+      currentZone=zone;
+      modalTitle.textContent=zone.name;
+      modalMeta.textContent=` • id: ${zone.id}`;
+      showModal();
+      const url=(zone.url||'').replace("{COVER_URL}",COVERS_BASE_URL).replace("{HTML_URL}",HTML_BASE_URL);
+      try{
+        const response=await fetch(`${url}?t=${Date.now()}`);
+        if(!response.ok)throw new Error('Fetch returned '+response.status);
+        const html=await response.text();
+        const iframeDoc=gameFrame.contentDocument||gameFrame.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(html);
+        iframeDoc.close();
+      }catch(err){
+        console.warn('Failed to fetch/write HTML into iframe (CORS or network). Trying to set iframe.src to remote URL. Error:',err);
+        try{
+          gameFrame.src=url;
+        }catch(err2){
+          console.error('Failed to set iframe.src',err2);
+          window.open(url,'_blank');
+          hideModal();
+        }
+      }
+    }
+
+    function showModal(){
+      modalBackdrop.classList.add('show');
+      modalBackdrop.style.visibility='visible';
+      modalBackdrop.style.opacity='1';
+      modalBackdrop.setAttribute('aria-hidden','false');
+    }
+
+    function hideModal(){
+      modalBackdrop.classList.remove('show');
+      modalBackdrop.style.visibility='hidden';
+      modalBackdrop.style.opacity='0';
+      modalBackdrop.setAttribute('aria-hidden','true');
+      gameFrame.src='about:blank';
+      try{
+        const d=gameFrame.contentDocument||gameFrame.contentWindow.document;
+        d.open();d.write('');d.close();
+      }catch(e){}
+      currentZone=null;
+    }
+
+    closeModal.addEventListener('click',hideModal);
+    modalBackdrop.addEventListener('click',(ev)=>{if(ev.target===modalBackdrop)hideModal()});
+
+    fullscreenBtn.addEventListener('click',()=>{
+      try{
+        if(gameFrame.requestFullscreen)gameFrame.requestFullscreen();
+        else if(gameFrame.webkitRequestFullscreen)gameFrame.webkitRequestFullscreen();
+        else if(gameFrame.mozRequestFullScreen)gameFrame.mozRequestFullScreen();
+      }catch(e){console.warn('Fullscreen not supported',e)}
+    });
+
+    searchEl.addEventListener('input',debounce(filterZones,250));
+    refreshBtn.addEventListener('click',fetchZones);
+
+    function sanitizeData(obj,maxStringLen=1000,maxArrayLen=10000){
+      if(typeof obj==='string'){
+        return obj.length>maxStringLen?obj.slice(0,maxStringLen)+'...[truncated]':obj;
+      }
+      if(obj instanceof Uint8Array){
+        if(obj.length>maxArrayLen){
+          return `[Uint8Array too large (${obj.length} bytes), truncated]`;
+        }
+        return obj;
+      }
+      if(Array.isArray(obj)){
+        return obj.map(item=>sanitizeData(item,maxStringLen,maxArrayLen));
+      }
+      if(obj&&typeof obj==='object'){
+        const newObj={};
+        for(const key in obj){
+          if(obj.hasOwnProperty(key)){
+            newObj[key]=sanitizeData(obj[key],maxStringLen,maxArrayLen);
+          }
+        }
+        return newObj;
+      }
+      return obj;
+    }
+
+    async function saveData(){
+      alert("Exporting all site data. This may take a moment.");
+      const result={};
+      result.cookies=document.cookie;
+      result.localStorage={...localStorage};
+      result.sessionStorage={...sessionStorage};
+      result.indexedDB={};
+      try{
+        const dbs=await indexedDB.databases();
+        for(const dbInfo of dbs){
+          if(!dbInfo.name)continue;
+          result.indexedDB[dbInfo.name]={};
+          await new Promise((resolve,reject)=>{
+            const openRequest=indexedDB.open(dbInfo.name,dbInfo.version);
+            openRequest.onerror=()=>reject(openRequest.error);
+            openRequest.onsuccess=()=>{
+              const db=openRequest.result;
+              const storeNames=Array.from(db.objectStoreNames);
+              if(storeNames.length===0){
+                resolve();
+                return;
+              }
+              const transaction=db.transaction(storeNames,"readonly");
+              const storePromises=[];
+              for(const storeName of storeNames){
+                result.indexedDB[dbInfo.name][storeName]=[];
+                const store=transaction.objectStore(storeName);
+                const getAllRequest=store.getAll();
+                const p=new Promise((res,rej)=>{
+                  getAllRequest.onsuccess=()=>{
+                    result.indexedDB[dbInfo.name][storeName]=sanitizeData(getAllRequest.result,1000,100);
+                    res();
+                  };
+                  getAllRequest.onerror=()=>rej(getAllRequest.error);
+                });
+                storePromises.push(p);
+              }
+              Promise.all(storePromises).then(()=>resolve());
+            };
+          });
+        }
+      }catch(e){
+        console.error("IndexedDB export failed:",e);
+      }
+      alert("Export complete. Your download will begin now.");
+      const link=document.createElement("a");
+      link.href=URL.createObjectURL(new Blob([JSON.stringify(result)],{type:"application/octet-stream"}));
+      link.download=`site-data-${Date.now()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    async function loadData(event){
+      const file=event.target.files[0];
+      if(!file)return;
+      const reader=new FileReader();
+      reader.onload=async function(e){
+        try{
+          const data=JSON.parse(e.target.result);
+          if(data.cookies){
+            data.cookies.split(';').forEach(cookie=>{
+              document.cookie=cookie.trim();
+            });
+          }
+          if(data.localStorage){
+            localStorage.clear();
+            for(const key in data.localStorage){
+              localStorage.setItem(key,data.localStorage[key]);
+            }
+          }
+          if(data.sessionStorage){
+            sessionStorage.clear();
+            for(const key in data.sessionStorage){
+              sessionStorage.setItem(key,data.sessionStorage[key]);
+            }
+          }
+          if(data.indexedDB){
+            for(const dbName in data.indexedDB){
+              await new Promise((resolve,reject)=>{
+                const deleteRequest=indexedDB.deleteDatabase(dbName);
+                deleteRequest.onsuccess=resolve;
+                deleteRequest.onerror=reject;
+                deleteRequest.onblocked=()=>{
+                  console.warn("IndexedDB delete blocked for",dbName);
+                  resolve();
+                };
+              });
+              const stores=data.indexedDB[dbName];
+              const request=indexedDB.open(dbName,1);
+              request.onupgradeneeded=e=>{
+                const db=e.target.result;
+                for(const storeName in stores){
+                  if(!db.objectStoreNames.contains(storeName)){
+                    db.createObjectStore(storeName,{autoIncrement:true});
+                  }
+                }
+              };
+              request.onsuccess=e=>{
+                const db=e.target.result;
+                const transaction=db.transaction(Object.keys(stores),'readwrite');
+                for(const storeName in stores){
+                  const objectStore=transaction.objectStore(storeName);
+                  stores[storeName].forEach(item=>objectStore.put(item));
+                }
+                resolve();
+              };
+              request.onerror=()=>reject(request.error);
+            }
+          }
+          alert("Data imported successfully! Please log back in with your key.");
+          window.close();
+        }catch(err){
+          alert(`Failed to load data: ${err.message}`);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    exportBtn.addEventListener('click',saveData);
+    importBtn.addEventListener('click',()=>importFile.click());
+    importFile.addEventListener('change',loadData);
+
+    function debounce(fn,wait){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn.apply(this,a),wait)}}
+
+    fetchZones();
+  </script>
+</body>
+</html>
