@@ -673,7 +673,7 @@
 <body>
   <div id="loadingScreen" class="loading-screen">
     <div class="loading-content">
-      <div class="loading-title">Thank You For Purchasing</div>
+      <div class="loading-title">Games Launcher</div>
       <div class="loading-spinner"></div>
     </div>
   </div>
@@ -686,8 +686,6 @@
   </div>
 
   <header>
-    <span class="badge">Paid Version</span>
-    <div class="made-by">Made By <strong>Cavan</strong></div>
   </header>
 
   <main class="container">
@@ -734,7 +732,7 @@
             <button id="openNewTabBtn" class="btn small ghost" style="margin-left:10px">Open in New Tab</button>
           </div>
         </div>
-        <iframe id="gameFrame" src="about:blank" sandbox="allow-scripts allow-forms allow-pointer-lock allow-same-origin" loading="lazy"></iframe>
+        <iframe id="gameFrame" src="about:blank" sandbox="allow-scripts allow-forms allow-pointer-lock allow-same-origin allow-modals allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-downloads" loading="eager" allow="autoplay *; fullscreen *; gamepad *; microphone *; camera *; midi *; encrypted-media *; xr-spatial-tracking *; clipboard-read *; clipboard-write *; web-share *; accelerometer *; gyroscope *; magnetometer *; usb *; serial *" referrerpolicy="no-referrer" allowfullscreen></iframe>
       </div>
     </div>
   </div>
@@ -852,17 +850,13 @@
       }
 
       try{
-        const controller=new AbortController();
-        const timeout=setTimeout(()=>controller.abort(),20000);
-        
-        const response=await fetch(`${url}?t=${Date.now()}`,{
-          signal:controller.signal,
-          cache:'force-cache'
+        const response=await fetch(url,{
+          cache:'default',
+          mode:'cors'
         });
-        clearTimeout(timeout);
         
         if(!response.ok){
-          throw new Error('Fetch returned '+response.status);
+          throw new Error('Fetch failed');
         }
         
         const html=await response.text();
@@ -882,29 +876,16 @@
           if(!gameLoader.classList.contains('hidden')){
             hideLoader();
           }
-        },3000);
+        },2000);
         
       }catch(err){
-        console.warn('Failed to fetch HTML. Trying direct iframe src method. Error:',err);
-        try{
-          gameFrame.src=url;
-          gameFrame.onload=()=>{
-            hideLoader();
-            clearTimeout(loadTimeout);
-          };
-          setTimeout(()=>{
-            if(!gameLoader.classList.contains('hidden')){
-              hideLoader();
-            }
-          },5000);
-        }catch(err2){
-          console.error('Failed to load game',err2);
+        console.warn('Fetch failed, trying direct load:',err);
+        gameFrame.src=url;
+        gameFrame.onload=()=>{
           hideLoader();
           clearTimeout(loadTimeout);
-          alert('Failed to load game. Opening in new tab instead.');
-          window.open(url,'_blank');
-          hideModal();
-        }
+        };
+        setTimeout(()=>hideLoader(),2000);
       }
     }
 
