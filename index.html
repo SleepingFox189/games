@@ -3,1168 +3,915 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Games Launcher - Paid Version</title>
-  <meta name="description" content="Premium games launcher" />
+  <title>Games</title>
+  <meta name="description" content="Games launcher" />
+  <!-- Permissions policy for gamepad and fullscreen -->
+  <meta http-equiv="Permissions-Policy" content="gamepad=(self), fullscreen=(self)">
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#000000;
-      --card:#0a0a0f;
-      --muted:#8b92a8;
-      --accent:#1e90ff;
-      --accent-glow:rgba(30,144,255,0.4);
-      --blue:#00bfff;
-      --dark-blue:#0047ab;
-      --purple:#8b5cf6;
-      --cyan:#06b6d4;
+    :root {
+      --bg: #0a0a0f;
+      --card-bg: #1a1a2e;
+      --card-border: #2a2a3e;
+      --accent: #4a9eff;
+      --text: #ffffff;
+      --text-muted: #a0a8c0;
     }
     
-    *{box-sizing:border-box;margin:0;padding:0}
-    
-    @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes shimmer{0%{background-position:-1000px 0}100%{background-position:1000px 0}}
-    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-    @keyframes glow{0%,100%{box-shadow:0 0 20px var(--accent-glow)}50%{box-shadow:0 0 40px var(--accent-glow),0 0 60px var(--accent-glow)}}
-    @keyframes slideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
-    @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @keyframes gradientShift{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
-    @keyframes rotate{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-    @keyframes slideIn{from{transform:translateX(-50px);opacity:0}to{transform:translateX(0);opacity:1}}
-    @keyframes scaleIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}
-    @keyframes neonPulse{0%,100%{filter:drop-shadow(0 0 5px var(--blue)) drop-shadow(0 0 15px var(--blue))}50%{filter:drop-shadow(0 0 10px var(--cyan)) drop-shadow(0 0 25px var(--cyan))}}
-    
-    .loading-screen{
-      position:fixed;
-      inset:0;
-      background:linear-gradient(135deg,#000000 0%,#0a0020 25%,#001a33 50%,#0a0020 75%,#000000 100%);
-      background-size:400% 400%;
-      animation:gradientShift 8s ease infinite;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      z-index:9999;
-      transition:opacity .8s ease,visibility .8s ease;
-      overflow:hidden
-    }
-
-    .loading-screen::before{
-      content:'';
-      position:absolute;
-      width:200%;
-      height:200%;
-      background:radial-gradient(circle,rgba(30,144,255,0.1) 0%,transparent 70%);
-      animation:rotate 20s linear infinite
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
     
-    .loading-screen.hidden{opacity:0;visibility:hidden}
-    .loading-content{
-      text-align:center;
-      animation:scaleIn 1s ease;
-      position:relative;
-      z-index:1
+    html, body {
+      height: 100%;
+      overflow-x: hidden;
     }
     
-    .loading-title{
-      font-size:56px;
-      font-weight:900;
-      font-family:'Space Grotesk',sans-serif;
-      background:linear-gradient(135deg,#00bfff 0%,#1e90ff 25%,#8b5cf6 50%,#1e90ff 75%,#00bfff 100%);
-      background-size:300% 300%;
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      background-clip:text;
-      margin-bottom:30px;
-      animation:pulse 2s ease-in-out infinite,gradientShift 8s ease infinite;
-      letter-spacing:-2px;
-      filter:drop-shadow(0 0 20px rgba(30,144,255,0.5))
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     
-    .loading-spinner{
-      width:70px;
-      height:70px;
-      border:5px solid rgba(30,144,255,.15);
-      border-top-color:var(--blue);
-      border-right-color:var(--purple);
-      border-radius:50%;
-      animation:spin .8s linear infinite;
-      margin:30px auto;
-      filter:drop-shadow(0 0 10px var(--blue))
+    /* Loading Screen */
+    .loading-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.3s ease;
     }
     
-    body{
-      margin:0;
-      font-family:'Inter',system-ui,-apple-system,sans-serif;
-      background:#000000;
-      color:#f0f4f8;
-      min-height:100vh;
-      position:relative;
-      overflow-x:hidden
+    .loading-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
     }
     
-    body::before{
-      content:'';
-      position:fixed;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
-      background:
-        radial-gradient(circle at 15% 20%, rgba(30,144,255,.2) 0%, transparent 40%),
-        radial-gradient(circle at 85% 80%, rgba(139,92,246,.15) 0%, transparent 40%),
-        radial-gradient(circle at 50% 50%, rgba(6,182,212,.1) 0%, transparent 50%),
-        linear-gradient(135deg,#000000 0%,#001a33 25%,#000d1a 50%,#0a0020 75%,#000000 100%);
-      background-size:400% 400%;
-      animation:gradientShift 25s ease infinite;
-      pointer-events:none;
-      z-index:0
+    .loading-title {
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 20px;
     }
     
-    body::after{
-      content:'';
-      position:fixed;
-      top:-50%;
-      left:-50%;
-      width:200%;
-      height:200%;
-      background:
-        radial-gradient(circle at 25% 25%,rgba(30,144,255,.08) 0%,transparent 25%),
-        radial-gradient(circle at 75% 75%,rgba(139,92,246,.08) 0%,transparent 25%);
-      animation:rotate 40s linear infinite;
-      pointer-events:none;
-      z-index:0;
-      opacity:0.6
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(74, 158, 255, 0.2);
+      border-top: 3px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
     }
     
-    header{
-      padding:28px 40px;
-      border-bottom:1px solid rgba(30,144,255,.25);
-      backdrop-filter:blur(20px) saturate(180%);
-      background:rgba(0,10,20,.8);
-      display:flex;
-      gap:20px;
-      align-items:center;
-      position:sticky;
-      top:0;
-      z-index:100;
-      animation:slideUp .8s ease;
-      box-shadow:0 4px 30px rgba(0,0,0,.5)
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
     
-    header::after{
-      content:'';
-      position:absolute;
-      bottom:-1px;
-      left:0;
-      width:100%;
-      height:3px;
-      background:linear-gradient(90deg,transparent,var(--blue),var(--purple),var(--cyan),transparent);
-      animation:shimmer 4s linear infinite
+    /* Header */
+    .main-header {
+      padding: 15px 20px;
+      background: rgba(10, 10, 15, 0.95);
+      border-bottom: 1px solid rgba(74, 158, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
     }
     
-    .badge{
-      display:inline-block;
-      padding:10px 24px;
-      background:linear-gradient(135deg,#0047ab 0%,#1e90ff 50%,#8b5cf6 100%);
-      color:#fff;
-      border-radius:30px;
-      font-size:14px;
-      font-weight:800;
-      text-transform:uppercase;
-      letter-spacing:1.5px;
-      animation:neonPulse 3s ease-in-out infinite;
-      box-shadow:0 4px 20px rgba(30,144,255,.4),inset 0 1px 0 rgba(255,255,255,.2);
-      font-family:'Space Grotesk',sans-serif;
-      border:1px solid rgba(255,255,255,.1)
+    .logo {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--accent);
     }
     
-    .made-by{
-      margin-left:auto;
-      font-size:15px;
-      color:#a0aec0;
-      padding:12px 24px;
-      border-radius:12px;
-      background:linear-gradient(135deg,rgba(30,144,255,.08),rgba(139,92,246,.08));
-      backdrop-filter:blur(10px);
-      border:1px solid rgba(30,144,255,.3);
-      transition:all .4s cubic-bezier(.4,0,.2,1);
-      font-weight:600;
-      position:relative;
-      overflow:hidden
-    }
-
-    .made-by::before{
-      content:'';
-      position:absolute;
-      inset:0;
-      background:linear-gradient(135deg,rgba(30,144,255,.15),rgba(139,92,246,.15));
-      opacity:0;
-      transition:opacity .4s ease
-    }
-
-    .made-by:hover::before{opacity:1}
-    
-    .made-by:hover{
-      transform:translateY(-3px);
-      box-shadow:0 10px 30px rgba(30,144,255,.3);
-      border-color:var(--blue)
+    .stats {
+      color: var(--text-muted);
+      font-size: 14px;
     }
     
-    .made-by strong{
-      color:transparent;
-      background:linear-gradient(135deg,#00bfff,#8b5cf6);
-      -webkit-background-clip:text;
-      background-clip:text;
-      font-weight:800;
-      position:relative;
-      z-index:1
+    /* Container */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
     }
     
-    .container{
-      max-width:1400px;
-      margin:40px auto;
-      padding:0 40px;
-      position:relative;
-      z-index:1;
-      animation:fadeIn 1s ease .3s both
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
     }
     
-    .controls{
-      display:flex;
-      gap:14px;
-      align-items:center;
-      margin-bottom:40px;
-      animation:slideIn 1s ease .5s both;
-      flex-wrap:wrap
+    .search-box {
+      flex: 1;
+      min-width: 250px;
     }
     
-    input[type="search"]{
-      flex:1;
-      min-width:250px;
-      padding:18px 28px;
-      border-radius:16px;
-      border:2px solid rgba(30,144,255,.25);
-      background:rgba(0,10,20,.9);
-      backdrop-filter:blur(15px);
-      color:#fff;
-      font-size:16px;
-      font-weight:500;
-      transition:all .4s cubic-bezier(.4,0,.2,1);
-      box-shadow:0 4px 20px rgba(0,0,0,.3)
+    .search-box input {
+      width: 100%;
+      padding: 12px 15px;
+      background: rgba(30, 30, 40, 0.9);
+      border: 1px solid rgba(74, 158, 255, 0.2);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'Inter', sans-serif;
     }
     
-    input[type="search"]:focus{
-      outline:none;
-      border-color:var(--blue);
-      box-shadow:0 0 40px var(--accent-glow),0 8px 30px rgba(30,144,255,.3);
-      transform:translateY(-2px);
-      background:rgba(0,20,40,.95)
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--accent);
     }
     
-    input[type="search"]::placeholder{color:#4a5568;font-weight:500}
-    
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
-      gap:28px;
-      margin-bottom:40px
+    .search-box input::placeholder {
+      color: var(--text-muted);
     }
     
-    .card{
-      background:linear-gradient(135deg,rgba(0,10,20,.95) 0%,rgba(10,26,51,.9) 100%);
-      border:2px solid rgba(30,144,255,.2);
-      border-radius:24px;
-      overflow:hidden;
-      position:relative;
-      cursor:pointer;
-      display:flex;
-      flex-direction:column;
-      height:280px;
-      transition:all .5s cubic-bezier(.175,.885,.32,1.275);
-      animation:fadeIn .5s ease both;
-      box-shadow:0 8px 32px rgba(0,0,0,.4)
+    .btn {
+      padding: 12px 20px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s ease;
     }
     
-    .card::before{
-      content:'';
-      position:absolute;
-      inset:-3px;
-      background:linear-gradient(135deg,var(--blue),var(--purple),var(--cyan));
-      border-radius:24px;
-      opacity:0;
-      transition:opacity .5s ease;
-      z-index:-1;
-      filter:blur(15px)
-    }
-
-    .card::after{
-      content:'';
-      position:absolute;
-      top:0;
-      left:0;
-      right:0;
-      bottom:0;
-      background:linear-gradient(180deg,transparent 0%,rgba(0,0,0,.3) 100%);
-      opacity:0;
-      transition:opacity .5s ease;
-      pointer-events:none
+    .btn:hover {
+      background: #3a8eff;
     }
     
-    .card:hover::before{opacity:1}
-    .card:hover::after{opacity:1}
-    
-    .card:hover{
-      transform:translateY(-16px) scale(1.04);
-      box-shadow:0 30px 60px rgba(0,0,0,.6),0 0 60px var(--accent-glow);
-      border-color:var(--cyan)
+    /* Games Grid */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
     }
     
-    .card img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-      transition:transform .5s ease,filter .5s ease;
-      filter:brightness(0.9)
+    .game-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      transform: translateZ(0);
     }
     
-    .card:hover img{
-      transform:scale(1.2);
-      filter:brightness(1.1)
+    .game-card:hover {
+      transform: translateY(-3px) translateZ(0);
+      border-color: var(--accent);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     }
     
-    .card .label{
-      position:absolute;
-      left:0;
-      right:0;
-      bottom:0;
-      padding:20px 22px;
-      background:linear-gradient(180deg,transparent,rgba(0,0,0,.98) 30%);
-      font-size:16px;
-      font-weight:800;
-      transition:all .4s ease;
-      color:#fff;
-      letter-spacing:.4px;
-      text-shadow:0 2px 10px rgba(0,0,0,.8);
-      z-index:1
+    .game-image {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      display: block;
+      background: #1a1a2e;
+      transform: translateZ(0);
     }
     
-    .card:hover .label{
-      background:linear-gradient(180deg,transparent,rgba(0,26,51,.98) 20%);
-      padding-bottom:24px;
-      color:transparent;
-      background-clip:text;
-      -webkit-background-clip:text;
-      background-image:linear-gradient(135deg,#00bfff,#8b5cf6);
-      text-shadow:0 0 20px rgba(30,144,255,.8)
+    .game-info {
+      padding: 12px;
     }
     
-    .meta{font-size:14px;color:var(--muted);padding:10px 0 0}
-    .center{text-align:center}
-    
-    .modal-backdrop{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.95);
-      backdrop-filter:blur(25px);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:20px;
-      z-index:999;
-      visibility:hidden;
-      opacity:0;
-      transition:all .4s ease
+    .game-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     
-    .modal-backdrop.show{visibility:visible;opacity:1}
-    
-    .modal{
-      width:100%;
-      max-width:1200px;
-      height:85vh;
-      background:linear-gradient(135deg,#000000 0%,#001a33 50%,#0a0020 100%);
-      border-radius:30px;
-      border:3px solid rgba(30,144,255,.5);
-      display:flex;
-      flex-direction:column;
-      overflow:hidden;
-      transform:scale(.85);
-      transition:transform .4s ease;
-      box-shadow:0 50px 100px rgba(0,0,0,.9),0 0 150px rgba(30,144,255,.3);
-      position:relative
-    }
-
-    .modal::before{
-      content:'';
-      position:absolute;
-      inset:-2px;
-      background:linear-gradient(135deg,var(--blue),var(--purple),var(--cyan),var(--blue));
-      background-size:300% 300%;
-      animation:gradientShift 6s ease infinite;
-      border-radius:30px;
-      opacity:0.3;
-      z-index:-1;
-      filter:blur(20px)
+    .game-category {
+      font-size: 11px;
+      color: var(--accent);
+      margin-top: 4px;
     }
     
-    .modal-backdrop.show .modal{transform:scale(1)}
-    
-    .modal header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:24px 32px;
-      border-bottom:2px solid rgba(30,144,255,.3);
-      background:rgba(0,10,20,.9);
-      backdrop-filter:blur(20px)
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 1000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
     }
     
-    .modal-title{
-      font-weight:800;
-      font-size:20px;
-      letter-spacing:.5px;
-      background:linear-gradient(135deg,#00bfff,#8b5cf6);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      background-clip:text
-    }
-    .modal .iframe-wrap{flex:1;background:#000;position:relative;overflow:hidden}
-    iframe{width:100%;height:100%;border:0}
-    
-    .game-loader{
-      position:absolute;
-      inset:0;
-      background:linear-gradient(135deg,#000000 0%,#001a33 100%);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      z-index:10;
-      opacity:1;
-      transition:opacity .5s ease;
-    }
-
-    .game-loader.hidden{
-      opacity:0;
-      pointer-events:none;
-    }
-
-    .game-loader-spinner{
-      width:60px;
-      height:60px;
-      border:5px solid rgba(30,144,255,.15);
-      border-top-color:var(--blue);
-      border-right-color:var(--purple);
-      border-radius:50%;
-      animation:spin 0.8s linear infinite;
-      margin-bottom:25px;
-      filter:drop-shadow(0 0 15px var(--blue))
-    }
-
-    .game-loader-text{
-      color:#a0aec0;
-      font-size:16px;
-      margin-bottom:10px;
-      font-weight:600
-    }
-
-    .game-loader-tip{
-      color:var(--blue);
-      font-size:13px;
-      font-style:italic;
-      max-width:350px;
-      text-align:center;
-      line-height:1.6
-    }
-
-    .timeout-message{
-      display:none;
-      text-align:center;
-      padding:30px;
-    }
-
-    .timeout-message.show{
-      display:block;
-    }
-
-    .timeout-message h3{
-      background:linear-gradient(135deg,#00bfff,#8b5cf6);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      background-clip:text;
-      margin-bottom:18px;
-      font-size:22px;
-      font-weight:800
-    }
-
-    .timeout-message p{
-      color:var(--muted);
-      margin-bottom:25px;
-      line-height:1.7
+    .modal-backdrop.show {
+      display: flex;
     }
     
-    .btn{
-      background:linear-gradient(135deg,#0047ab 0%,#1e90ff 50%,#8b5cf6 100%);
-      color:#fff;
-      padding:14px 28px;
-      border-radius:14px;
-      border:0;
-      cursor:pointer;
-      font-weight:700;
-      font-size:15px;
-      transition:all .4s cubic-bezier(.4,0,.2,1);
-      position:relative;
-      overflow:hidden;
-      box-shadow:0 6px 20px rgba(30,144,255,.4);
-      letter-spacing:.6px;
-      border:1px solid rgba(255,255,255,.1)
+    /* SCROLL FIX: Lock body when modal is open */
+    body.modal-open {
+      position: fixed;
+      width: 100%;
+      overflow: hidden;
     }
     
-    .btn::before{
-      content:'';
-      position:absolute;
-      inset:0;
-      background:linear-gradient(135deg,transparent,rgba(255,255,255,.3));
-      transform:translateX(-100%);
-      transition:transform .4s ease
+    .modal {
+      width: 95%;
+      max-width: 1200px;
+      height: 85vh;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
     }
     
-    .btn:hover::before{transform:translateX(100%)}
-    .btn:hover{
-      transform:translateY(-3px);
-      box-shadow:0 12px 30px rgba(30,144,255,.5)
-    }
-    .btn:active{transform:translateY(0)}
-    
-    .btn.ghost{
-      background:linear-gradient(135deg,rgba(30,144,255,.1),rgba(139,92,246,.1));
-      border:2px solid rgba(30,144,255,.4);
-      color:#fff;
-      backdrop-filter:blur(10px)
+    /* FULLSCREEN FIX: Hide header and remove any padding/margin in fullscreen */
+    :fullscreen .modal-header,
+    :-webkit-full-screen .modal-header,
+    :-moz-full-screen .modal-header {
+      display: none !important;
     }
     
-    .btn.ghost:hover{
-      background:linear-gradient(135deg,rgba(30,144,255,.2),rgba(139,92,246,.2));
-      border-color:var(--blue)
+    :fullscreen .modal,
+    :-webkit-full-screen .modal,
+    :-moz-full-screen .modal {
+      width: 100vw !important;
+      height: 100vh !important;
+      border-radius: 0 !important;
+      padding: 0 !important;
+      margin: 0 !important;
     }
     
-    .small{padding:12px 22px;font-size:14px;border-radius:12px}
-    
-    .footer{
-      margin-top:60px;
-      padding:35px;
-      color:var(--muted);
-      font-size:15px;
-      text-align:center;
-      background:linear-gradient(135deg,rgba(0,10,20,.7),rgba(10,0,20,.7));
-      border-radius:20px;
-      border:2px solid rgba(30,144,255,.2);
-      animation:fadeIn 1.2s ease .8s both;
-      backdrop-filter:blur(15px);
-      line-height:1.8;
-      box-shadow:0 8px 32px rgba(0,0,0,.4);
-      position:relative;
-      overflow:hidden
-    }
-
-    .footer::before{
-      content:'';
-      position:absolute;
-      top:0;
-      left:0;
-      right:0;
-      height:2px;
-      background:linear-gradient(90deg,transparent,var(--blue),var(--purple),transparent);
-      animation:shimmer 3s linear infinite
+    :fullscreen .iframe-container,
+    :-webkit-full-screen .iframe-container,
+    :-moz-full-screen .iframe-container {
+      width: 100vw !important;
+      height: 100vh !important;
     }
     
-    h2{
-      margin:0 0 35px 0;
-      font-size:42px;
-      font-weight:900;
-      font-family:'Space Grotesk',sans-serif;
-      background:linear-gradient(135deg,#00bfff 0%,#1e90ff 30%,#8b5cf6 60%,#06b6d4 100%);
-      background-size:300% 300%;
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      background-clip:text;
-      animation:float 5s ease-in-out infinite,gradientShift 10s ease infinite;
-      letter-spacing:-1.5px;
-      filter:drop-shadow(0 0 30px rgba(30,144,255,0.3))
-    }
-
-    .import-popup{
-      position:fixed;
-      inset:0;
-      background:rgba(0,0,0,.97);
-      backdrop-filter:blur(30px);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:10000;
-      visibility:hidden;
-      opacity:0;
-      transition:all .4s ease
-    }
-
-    .import-popup.show{visibility:visible;opacity:1}
-
-    .import-popup-content{
-      background:linear-gradient(135deg,#000000 0%,#001a33 50%,#0a0020 100%);
-      border:3px solid rgba(30,144,255,.6);
-      border-radius:30px;
-      padding:50px 60px;
-      text-align:center;
-      box-shadow:0 50px 100px rgba(0,0,0,.9),0 0 150px rgba(30,144,255,.5);
-      animation:scaleIn 0.5s ease;
-      position:relative;
-      overflow:hidden
-    }
-
-    .import-popup-content::before{
-      content:'';
-      position:absolute;
-      inset:-2px;
-      background:linear-gradient(135deg,var(--blue),var(--purple),var(--cyan),var(--blue));
-      background-size:300% 300%;
-      animation:gradientShift 6s ease infinite;
-      border-radius:30px;
-      opacity:0.2;
-      z-index:-1;
-      filter:blur(20px)
-    }
-
-    .import-popup-content h3{
-      font-size:32px;
-      font-family:'Space Grotesk',sans-serif;
-      background:linear-gradient(135deg,#00bfff 0%,#8b5cf6 50%,#06b6d4 100%);
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-      background-clip:text;
-      margin-bottom:25px;
-      font-weight:900;
-      filter:drop-shadow(0 0 20px rgba(30,144,255,0.5))
-    }
-
-    .import-popup-content p{
-      font-size:17px;
-      color:#a0aec0;
-      line-height:1.8
+    .modal-header {
+      padding: 15px 20px;
+      background: rgba(20, 20, 30, 0.95);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(74, 158, 255, 0.2);
+      flex-shrink: 0;
     }
     
-    @media (max-width:768px){
-      .card{height:240px}
-      .container{padding:0 24px}
-      .made-by{font-size:13px;padding:10px 16px}
-      .loading-title{font-size:32px}
-      h2{font-size:32px}
-      .controls{gap:10px}
-      .grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:20px}
-      .import-popup-content{padding:35px 45px}
-      .import-popup-content h3{font-size:26px}
-      header{padding:20px 24px}
+    .modal-title {
+      font-weight: 500;
+      color: var(--text);
+      font-size: 16px;
+    }
+    
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .iframe-container {
+      flex: 1;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .game-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+      background: #000;
+    }
+    
+    .game-loader {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+    
+    .game-loader.hidden {
+      display: none;
+    }
+    
+    .game-loader-spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(74, 158, 255, 0.2);
+      border-top: 3px solid var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 10px;
+    }
+    
+    .game-loader-text {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 15px;
+      }
+      
+      .games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+      }
+      
+      .modal {
+        width: 98%;
+        height: 80vh;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .games-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      }
+      
+      .modal {
+        width: 100%;
+        height: 75vh;
+        border-radius: 0;
+      }
+      
+      .modal-backdrop {
+        padding: 0;
+      }
     }
   </style>
 </head>
 <body>
+  <!-- Loading Screen -->
   <div id="loadingScreen" class="loading-screen">
-    <div class="loading-content">
-      <div class="loading-title">Games Launcher</div>
-      <div class="loading-spinner"></div>
-    </div>
+    <div class="loading-title">Games</div>
+    <div class="loading-spinner"></div>
   </div>
 
-  <div id="importPopup" class="import-popup">
-    <div class="import-popup-content">
-      <h3>✅ Success!</h3>
-      <p id="importMessage">Data imported successfully! Please log back in with your key.<br><br>Closing tab in <span id="countdown">5</span> seconds...</p>
-    </div>
-  </div>
-
-  <header>
+  <!-- Header -->
+  <header class="main-header">
+    <div class="logo">Games</div>
+    <div class="stats" id="gamesCount">Loading...</div>
   </header>
 
+  <!-- Main Content -->
   <main class="container">
+    <!-- Controls -->
     <div class="controls">
-      <input id="search" type="search" placeholder="🔍 Search games..." />
-      <button id="refreshBtn" class="btn small">Refresh</button>
-      <button id="exportBtn" class="btn small ghost">Export Data</button>
-      <button id="importBtn" class="btn small ghost">Import Data</button>
-      <input type="file" id="importFile" style="display:none" accept=".json">
+      <div class="search-box">
+        <input type="search" id="search" placeholder="Search games..." autocomplete="off">
+      </div>
+      <button id="refreshBtn" class="btn">Refresh</button>
+      <button id="fullscreenMode" class="btn">Fullscreen</button>
     </div>
 
-    <section>
-      <h2>🎮 Games Collection</h2>
-      <div id="gamesGrid" class="grid" aria-live="polite"></div>
-      <div id="noResults" class="center meta" style="display:none;margin-top:28px">No games found.</div>
-    </section>
-
-    <div class="footer">
-      💡 <strong>Tip:</strong> Click a card to open the game in the modal. Use fullscreen for the best experience.
+    <!-- Games Grid -->
+    <div id="gamesGrid" class="games-grid"></div>
+    
+    <!-- No Results -->
+    <div id="noResults" style="text-align: center; color: var(--text-muted); display: none; padding: 30px 0;">
+      No games found
     </div>
   </main>
 
-  <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-hidden="true">
-    <div class="modal" role="document">
-      <header>
-        <div style="display:flex;gap:12px;align-items:center">
-          <strong id="modalTitle" class="modal-title">Loading…</strong>
-          <span id="modalMeta" style="color:#8b92a8;font-size:13px"></span>
+  <!-- Game Modal -->
+  <div id="modalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Game</div>
+        <div class="modal-actions">
+          <button id="fullscreenBtn" class="btn">Fullscreen</button>
+          <button id="closeModal" class="btn" style="background: #ff4757;">Close</button>
         </div>
-        <div style="display:flex;gap:10px;align-items:center">
-          <button id="fullscreenBtn" class="btn small">Fullscreen</button>
-          <button id="closeModal" class="btn small" style="background:#1a1a1a">Close</button>
-        </div>
-      </header>
-      <div class="iframe-wrap" id="iframeWrap">
+      </div>
+      <div class="iframe-container">
         <div id="gameLoader" class="game-loader">
           <div class="game-loader-spinner"></div>
           <div class="game-loader-text">Loading game...</div>
-          <div class="game-loader-tip">Tip: Some games may take longer on slower connections</div>
-          <div id="timeoutMessage" class="timeout-message">
-            <h3>⚠️ Loading Taking Too Long?</h3>
-            <p>The game might be having trouble loading. This could be due to a slow connection or the game server being slow.</p>
-            <button id="retryBtn" class="btn small">Retry</button>
-            <button id="openNewTabBtn" class="btn small ghost" style="margin-left:10px">Open in New Tab</button>
-          </div>
         </div>
-        <iframe id="gameFrame" src="about:blank" sandbox="allow-scripts allow-forms allow-pointer-lock allow-same-origin allow-modals allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-downloads" loading="eager" allow="autoplay *; fullscreen *; gamepad *; microphone *; camera *; midi *; encrypted-media *; xr-spatial-tracking *; clipboard-read *; clipboard-write *; web-share *; accelerometer *; gyroscope *; magnetometer *; usb *; serial *" referrerpolicy="no-referrer" allowfullscreen></iframe>
+        <iframe id="gameFrame" class="game-frame" allowfullscreen></iframe>
       </div>
     </div>
   </div>
 
   <script>
-    window.addEventListener('load',()=>{setTimeout(()=>{document.getElementById('loadingScreen').classList.add('hidden')},2500)});
-
-    const ZONES_JSON_URL="https://cdn.jsdelivr.net/gh/gn-math/assets@main/zones.json";
-    const COVERS_BASE_URL="https://cdn.jsdelivr.net/gh/gn-math/covers@main";
-    const HTML_BASE_URL="https://cdn.jsdelivr.net/gh/gn-math/html@main";
-
-    const searchEl=document.getElementById('search');
-    const grid=document.getElementById('gamesGrid');
-    const noResults=document.getElementById('noResults');
-    const refreshBtn=document.getElementById('refreshBtn');
-    const exportBtn=document.getElementById('exportBtn');
-    const importBtn=document.getElementById('importBtn');
-    const importFile=document.getElementById('importFile');
-    const importPopup=document.getElementById('importPopup');
-    const importMessage=document.getElementById('importMessage');
-    const countdown=document.getElementById('countdown');
-    const modalBackdrop=document.getElementById('modalBackdrop');
-    const modalTitle=document.getElementById('modalTitle');
-    const modalMeta=document.getElementById('modalMeta');
-    const gameFrame=document.getElementById('gameFrame');
-    const iframeWrap=document.getElementById('iframeWrap');
-    const gameLoader=document.getElementById('gameLoader');
-    const timeoutMessage=document.getElementById('timeoutMessage');
-    const retryBtn=document.getElementById('retryBtn');
-    const openNewTabBtn=document.getElementById('openNewTabBtn');
-    const closeModal=document.getElementById('closeModal');
-    const fullscreenBtn=document.getElementById('fullscreenBtn');
-
-    let zones=[];
-    let currentZone=null;
-    let loadTimeout=null;
-    let htmlCache={};
-
-    function createCard(game,index){
-      const a=document.createElement('div');
-      a.className='card';
-      a.title=game.name;
-      a.dataset.id=game.id;
-      a.style.setProperty('--i',index);
-      const cover=(game.cover||'').replace("{COVER_URL}",COVERS_BASE_URL).replace("{HTML_URL}",HTML_BASE_URL);
-      const img=document.createElement('img');
-      img.src=cover;
-      img.alt=game.name;
-      img.loading='lazy';
-      const label=document.createElement('div');
-      label.className='label';
-      label.textContent=game.name;
-      a.appendChild(img);
-      a.appendChild(label);
-      a.addEventListener('click',()=>openGame(game));
-      return a;
-    }
-
-    async function fetchZones(){
-      grid.innerHTML='';
-      noResults.style.display='none';
-      try{
-        const res=await fetch(`${ZONES_JSON_URL}?t=${Date.now()}`,{
-          signal:AbortSignal.timeout(10000)
-        });
-        if(!res.ok)throw new Error('Failed to fetch zones.json');
-        const all=await res.json();
-        zones=all.filter(z=>String(z.id)!=='-1');
-        renderZones(zones);
-      }catch(err){
-        console.error('Error loading zones.json',err);
-        grid.innerHTML='<div class="meta center">Failed to load games list. Check console for details.</div>';
-      }
-    }
-
-    function renderZones(list){
-      grid.innerHTML='';
-      if(!list||list.length===0){
-        noResults.style.display='block';
-        return;
-      }
-      const frag=document.createDocumentFragment();
-      list.forEach((game,index)=>frag.appendChild(createCard(game,index)));
-      grid.appendChild(frag);
-    }
-
-    function filterZones(){
-      const q=(searchEl.value||'').toLowerCase().trim();
-      if(!q){
-        renderZones(zones);
-        return;
-      }
-      const results=zones.filter(g=>(g.name||'').toLowerCase().includes(q));
-      renderZones(results);
-      if(!results.length)noResults.style.display='block';else noResults.style.display='none';
-    }
-
-    async function openGame(zone){
-      currentZone=zone;
-      modalTitle.textContent=zone.name;
-      modalMeta.textContent=` • id: ${zone.id}`;
-      showModal();
-      showLoader();
+    // Configuration
+    const ZONES_JSON_URL = "https://cdn.jsdelivr.net/gh/gn-math/assets@main/zones.json";
+    const COVERS_BASE_URL = "https://cdn.jsdelivr.net/gh/gn-math/covers@main";
+    const HTML_BASE_URL = "https://cdn.jsdelivr.net/gh/gn-math/html@main";
+    
+    // DOM Elements
+    const loadingScreen = document.getElementById('loadingScreen');
+    const searchInput = document.getElementById('search');
+    const gamesGrid = document.getElementById('gamesGrid');
+    const noResults = document.getElementById('noResults');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const fullscreenMode = document.getElementById('fullscreenMode');
+    const gamesCount = document.getElementById('gamesCount');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalTitle = document.getElementById('modalTitle');
+    const gameFrame = document.getElementById('gameFrame');
+    const gameLoader = document.getElementById('gameLoader');
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
+    const closeModal = document.getElementById('closeModal');
+    
+    // State
+    let games = [];
+    let scrollPosition = 0;
+    let currentGameUrl = '';
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        loadingScreen.classList.add('hidden');
+      }, 800);
       
-      clearTimeout(loadTimeout);
-      loadTimeout=setTimeout(()=>{
-        timeoutMessage.classList.add('show');
-      },15000);
-
-      const url=(zone.url||'').replace("{COVER_URL}",COVERS_BASE_URL).replace("{HTML_URL}",HTML_BASE_URL);
+      fetchGames();
+      setupEventListeners();
+    });
+    
+    // Setup all event listeners
+    function setupEventListeners() {
+      searchInput.addEventListener('input', debounce(filterGames, 300));
+      refreshBtn.addEventListener('click', fetchGames);
+      fullscreenMode.addEventListener('click', toggleFullscreenMode);
+      fullscreenBtn.addEventListener('click', toggleGameFullscreen);
+      closeModal.addEventListener('click', closeGameModal);
       
-      if(htmlCache[url]){
-        loadCachedGame(url);
-        return;
-      }
-
-      try{
-        const response=await fetch(url,{
-          cache:'default',
-          mode:'cors'
-        });
-        
-        if(!response.ok){
-          throw new Error('Fetch failed');
-        }
-        
-        const html=await response.text();
-        htmlCache[url]=html;
-        
-        const iframeDoc=gameFrame.contentDocument||gameFrame.contentWindow.document;
-        iframeDoc.open();
-        iframeDoc.write(html);
-        iframeDoc.close();
-        
-        gameFrame.onload=()=>{
-          hideLoader();
-          clearTimeout(loadTimeout);
-        };
-        
-        setTimeout(()=>{
-          if(!gameLoader.classList.contains('hidden')){
-            hideLoader();
-          }
-        },2000);
-        
-      }catch(err){
-        console.warn('Fetch failed, trying direct load:',err);
-        gameFrame.src=url;
-        gameFrame.onload=()=>{
-          hideLoader();
-          clearTimeout(loadTimeout);
-        };
-        setTimeout(()=>hideLoader(),2000);
-      }
-    }
-
-    function loadCachedGame(url){
-      const html=htmlCache[url];
-      try{
-        const iframeDoc=gameFrame.contentDocument||gameFrame.contentWindow.document;
-        iframeDoc.open();
-        iframeDoc.write(html);
-        iframeDoc.close();
-        setTimeout(()=>hideLoader(),500);
-      }catch(e){
-        gameFrame.src=url;
-        setTimeout(()=>hideLoader(),1000);
-      }
-    }
-
-    function showLoader(){
-      gameLoader.classList.remove('hidden');
-      timeoutMessage.classList.remove('show');
-    }
-
-    function hideLoader(){
-      gameLoader.classList.add('hidden');
-      timeoutMessage.classList.remove('show');
-    }
-
-    retryBtn.addEventListener('click',()=>{
-      if(currentZone){
-        delete htmlCache[(currentZone.url||'').replace("{COVER_URL}",COVERS_BASE_URL).replace("{HTML_URL}",HTML_BASE_URL)];
-        openGame(currentZone);
-      }
-    });
-
-    openNewTabBtn.addEventListener('click',()=>{
-      if(currentZone){
-        const url=(currentZone.url||'').replace("{COVER_URL}",COVERS_BASE_URL).replace("{HTML_URL}",HTML_BASE_URL);
-        window.open(url,'_blank');
-        hideModal();
-      }
-    });
-
-    function showModal(){
-      modalBackdrop.classList.add('show');
-      modalBackdrop.style.visibility='visible';
-      modalBackdrop.style.opacity='1';
-      modalBackdrop.setAttribute('aria-hidden','false');
-    }
-
-    function hideModal(){
-      modalBackdrop.classList.remove('show');
-      modalBackdrop.style.visibility='hidden';
-      modalBackdrop.style.opacity='0';
-      modalBackdrop.setAttribute('aria-hidden','true');
-      gameFrame.src='about:blank';
-      try{
-        const d=gameFrame.contentDocument||gameFrame.contentWindow.document;
-        d.open();d.write('');d.close();
-      }catch(e){}
-      hideLoader();
-      clearTimeout(loadTimeout);
-      currentZone=null;
-    }
-
-    closeModal.addEventListener('click',hideModal);
-    modalBackdrop.addEventListener('click',(ev)=>{if(ev.target===modalBackdrop)hideModal()});
-
-    fullscreenBtn.addEventListener('click',async()=>{
-      try{
-        const modal=document.querySelector('.modal');
-        modal.style.position='fixed';
-        modal.style.inset='0';
-        modal.style.width='100vw';
-        modal.style.height='100vh';
-        modal.style.maxWidth='none';
-        modal.style.borderRadius='0';
-        modal.style.transform='none';
-        modalBackdrop.style.padding='0';
-        
-        const modalHeader=modal.querySelector('header');
-        modalHeader.style.position='absolute';
-        modalHeader.style.top='0';
-        modalHeader.style.left='0';
-        modalHeader.style.right='0';
-        modalHeader.style.zIndex='1000';
-        modalHeader.style.opacity='0';
-        modalHeader.style.transition='opacity 0.3s ease';
-        
-        modal.addEventListener('mousemove',()=>{
-          modalHeader.style.opacity='1';
-          clearTimeout(modal.hideHeaderTimeout);
-          modal.hideHeaderTimeout=setTimeout(()=>{
-            modalHeader.style.opacity='0';
-          },2000);
-        });
-        
-        fullscreenBtn.textContent='Exit Fullscreen';
-        fullscreenBtn.onclick=()=>{
-          modal.style.position='';
-          modal.style.inset='';
-          modal.style.width='';
-          modal.style.height='';
-          modal.style.maxWidth='';
-          modal.style.borderRadius='';
-          modal.style.transform='';
-          modalBackdrop.style.padding='';
-          modalHeader.style.position='';
-          modalHeader.style.opacity='';
-          fullscreenBtn.textContent='Fullscreen';
-          fullscreenBtn.onclick=null;
-        };
-      }catch(e){
-        console.warn('Fullscreen error:',e);
-      }
-    });
-
-    searchEl.addEventListener('input',debounce(filterZones,250));
-    refreshBtn.addEventListener('click',fetchZones);
-
-    function sanitizeData(obj,maxStringLen=1000,maxArrayLen=10000){
-      if(typeof obj==='string'){
-        return obj.length>maxStringLen?obj.slice(0,maxStringLen)+'...[truncated]':obj;
-      }
-      if(obj instanceof Uint8Array){
-        if(obj.length>maxArrayLen){
-          return `[Uint8Array too large (${obj.length} bytes), truncated]`;
-        }
-        return obj;
-      }
-      if(Array.isArray(obj)){
-        return obj.map(item=>sanitizeData(item,maxStringLen,maxArrayLen));
-      }
-      if(obj&&typeof obj==='object'){
-        const newObj={};
-        for(const key in obj){
-          if(obj.hasOwnProperty(key)){
-            newObj[key]=sanitizeData(obj[key],maxStringLen,maxArrayLen);
+      // Handle ESC key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          if (document.fullscreenElement) {
+            document.exitFullscreen();
+          } else {
+            closeGameModal();
           }
         }
-        return newObj;
-      }
-      return obj;
+      });
+      
+      // Handle fullscreen change
+      document.addEventListener('fullscreenchange', handleFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     }
-
-    async function saveData(){
-      const result={};
-      result.cookies=document.cookie;
-      result.localStorage={...localStorage};
-      result.sessionStorage={...sessionStorage};
-      result.indexedDB={};
-      try{
-        const dbs=await indexedDB.databases();
-        for(const dbInfo of dbs){
-          if(!dbInfo.name)continue;
-          result.indexedDB[dbInfo.name]={};
-          await new Promise((resolve,reject)=>{
-            const openRequest=indexedDB.open(dbInfo.name,dbInfo.version);
-            openRequest.onerror=()=>reject(openRequest.error);
-            openRequest.onsuccess=()=>{
-              const db=openRequest.result;
-              const storeNames=Array.from(db.objectStoreNames);
-              if(storeNames.length===0){
-                resolve();
+    
+    // Handle fullscreen changes
+    function handleFullscreenChange() {
+      if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement) {
+        try {
+          gameFrame.contentWindow.postMessage({ type: 'FULLSCREEN_CHANGE', fullscreen: false }, '*');
+        } catch (e) {}
+      }
+    }
+    
+    // Fetch games from JSON
+    async function fetchGames() {
+      try {
+        gamesGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">Loading games...</div>';
+        
+        const response = await fetch(`${ZONES_JSON_URL}?t=${Date.now()}`);
+        const data = await response.json();
+        
+        // Filter out invalid games and suggestions
+        games = data.filter(game => {
+          const name = game.name?.toLowerCase() || '';
+          return game.id && 
+                 game.id !== '-1' && 
+                 !name.includes('suggest') &&
+                 !name.includes('discord') &&
+                 !name.includes('.gg') &&
+                 !name.includes('[!]');
+        });
+        
+        // Update games count
+        gamesCount.textContent = `${games.length} games`;
+        
+        // Render games
+        renderGames(games);
+      } catch (error) {
+        console.error('Error loading games:', error);
+        gamesGrid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ff4757;">Failed to load games</div>';
+      }
+    }
+    
+    // Render games grid
+    function renderGames(gamesList) {
+      gamesGrid.innerHTML = '';
+      
+      if (!gamesList.length) {
+        noResults.style.display = 'block';
+        return;
+      }
+      
+      noResults.style.display = 'none';
+      
+      const fragment = document.createDocumentFragment();
+      
+      gamesList.forEach((game) => {
+        const card = createGameCard(game);
+        fragment.appendChild(card);
+      });
+      
+      gamesGrid.appendChild(fragment);
+    }
+    
+    // Create game card element
+    function createGameCard(game) {
+      const card = document.createElement('div');
+      card.className = 'game-card';
+      card.dataset.gameId = game.id;
+      
+      // Process image URL
+      let imageUrl = game.cover || '';
+      if (imageUrl.includes('{COVER_URL}')) {
+        imageUrl = imageUrl.replace('{COVER_URL}', COVERS_BASE_URL);
+      }
+      if (imageUrl.includes('{HTML_URL}')) {
+        imageUrl = imageUrl.replace('{HTML_URL}', HTML_BASE_URL);
+      }
+      
+      // If no image or broken URL, use placeholder
+      if (!imageUrl || imageUrl.includes('undefined')) {
+        imageUrl = `https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=250&fit=crop`;
+      }
+      
+      // Clean up game name
+      const gameName = game.name || 'Game';
+      const category = game.category || 'Arcade';
+      
+      card.innerHTML = `
+        <img src="${imageUrl}" alt="${gameName}" class="game-image" loading="lazy">
+        <div class="game-info">
+          <div class="game-title">${gameName}</div>
+          <div class="game-category">${category}</div>
+        </div>
+      `;
+      
+      // Add click event
+      card.addEventListener('click', function() {
+        openGame(game);
+      }, false);
+      
+      return card;
+    }
+    
+    // Filter games based on search
+    function filterGames() {
+      const query = searchInput.value.toLowerCase().trim();
+      
+      if (!query) {
+        renderGames(games);
+        return;
+      }
+      
+      const filteredGames = games.filter(game => {
+        const name = game.name?.toLowerCase() || '';
+        const category = game.category?.toLowerCase() || '';
+        return name.includes(query) || category.includes(query);
+      });
+      
+      renderGames(filteredGames);
+    }
+    
+    // Improved HTML detection function
+    function isHtmlContent(content, url) {
+      const lowerContent = content.toLowerCase();
+      const lowerUrl = url.toLowerCase();
+      
+      // Check URL extension
+      if (lowerUrl.endsWith('.html') || lowerUrl.includes('.html?')) {
+        return true;
+      }
+      
+      // Check for common HTML patterns
+      const htmlPatterns = [
+        '<!doctype',
+        '<html',
+        '<head>',
+        '<body>',
+        '<!--',
+        '<script',
+        '<style',
+        '<div',
+        '<canvas',
+        '</html>',
+        '</body>',
+        '</head>',
+        'unityloader',
+        'webgl-content',
+        'gamecontainer'
+      ];
+      
+      // Check if any HTML pattern exists in content
+      for (const pattern of htmlPatterns) {
+        if (lowerContent.includes(pattern)) {
+          return true;
+        }
+      }
+      
+      // Check for HTML comment at the start (like your example)
+      if (content.trim().startsWith('<!--')) {
+        return true;
+      }
+      
+      return false;
+    }
+    
+    // Inject critical fixes for Chrome compatibility
+    function injectChromeFixes(html) {
+      const fixes = `
+        <script>
+          // Fix for google.csi error
+          if (typeof google === 'undefined') window.google = {};
+          if (typeof google.csi === 'undefined') {
+            google.csi = {
+              tick: function() {},
+              report: function() {},
+              startTick: function() {},
+              endTick: function() {}
+            };
+          }
+          
+          // Fix for Unity gamepad permission error (Chrome-specific)
+          // This prevents the "Failed to execute 'getGamepads'" crash
+          if (typeof navigator.getGamepads === 'function') {
+            const originalGetGamepads = navigator.getGamepads;
+            navigator.getGamepads = function() {
+              try {
+                return originalGetGamepads.call(navigator);
+              } catch (e) {
+                // Return empty array if permission is denied
+                return [];
+              }
+            };
+          }
+          
+          // Alternative: nullify getGamepads if the above doesn't work
+          // navigator.getGamepads = null;
+          
+          // Suppress Unity cache errors (non-critical)
+          if (typeof console !== 'undefined') {
+            const originalError = console.error;
+            console.error = function(...args) {
+              if (typeof args[0] === 'string' && 
+                  (args[0].includes('UnityCache') || args[0].includes('IDBDatabase'))) {
+                // Silently ignore Unity cache errors
                 return;
               }
-              const transaction=db.transaction(storeNames,"readonly");
-              const storePromises=[];
-              for(const storeName of storeNames){
-                result.indexedDB[dbInfo.name][storeName]=[];
-                const store=transaction.objectStore(storeName);
-                const getAllRequest=store.getAll();
-                const p=new Promise((res,rej)=>{
-                  getAllRequest.onsuccess=()=>{
-                    result.indexedDB[dbInfo.name][storeName]=sanitizeData(getAllRequest.result,1000,100);
-                    res();
-                  };
-                  getAllRequest.onerror=()=>rej(getAllRequest.error);
-                });
-                storePromises.push(p);
-              }
-              Promise.all(storePromises).then(()=>resolve());
+              originalError.apply(console, args);
             };
-          });
-        }
-      }catch(e){
-        console.error("IndexedDB export failed:",e);
+          }
+        </script>
+      `;
+      
+      // Inject fixes before closing </head> tag, or if no head, insert at beginning
+      if (html.includes('</head>')) {
+        return html.replace('</head>', fixes + '</head>');
+      } else if (html.includes('<body>')) {
+        return html.replace('<body>', '<head>' + fixes + '</head><body>');
+      } else {
+        return fixes + html;
       }
-      const link=document.createElement("a");
-      link.href=URL.createObjectURL(new Blob([JSON.stringify(result)],{type:"application/json"}));
-      link.download=`site-data-${Date.now()}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
     }
-
-    async function loadData(event){
-      const file=event.target.files[0];
-      if(!file)return;
-      const reader=new FileReader();
-      reader.onload=async function(e){
-        try{
-          const data=JSON.parse(e.target.result);
-          if(data.cookies){
-            data.cookies.split(';').forEach(cookie=>{
-              document.cookie=cookie.trim();
-            });
-          }
-          if(data.localStorage){
-            localStorage.clear();
-            for(const key in data.localStorage){
-              localStorage.setItem(key,data.localStorage[key]);
-            }
-          }
-          if(data.sessionStorage){
-            sessionStorage.clear();
-            for(const key in data.sessionStorage){
-              sessionStorage.setItem(key,data.sessionStorage[key]);
-            }
-          }
-          if(data.indexedDB){
-            for(const dbName in data.indexedDB){
-              await new Promise((resolve,reject)=>{
-                const deleteRequest=indexedDB.deleteDatabase(dbName);
-                deleteRequest.onsuccess=resolve;
-                deleteRequest.onerror=reject;
-                deleteRequest.onblocked=()=>{
-                  console.warn("IndexedDB delete blocked for",dbName);
-                  resolve();
-                };
-              });
-              const stores=data.indexedDB[dbName];
-              const request=indexedDB.open(dbName,1);
-              request.onupgradeneeded=e=>{
-                const db=e.target.result;
-                for(const storeName in stores){
-                  if(!db.objectStoreNames.contains(storeName)){
-                    db.createObjectStore(storeName,{autoIncrement:true});
-                  }
-                }
-              };
-              request.onsuccess=e=>{
-                const db=e.target.result;
-                const transaction=db.transaction(Object.keys(stores),'readwrite');
-                for(const storeName in stores){
-                  const objectStore=transaction.objectStore(storeName);
-                  stores[storeName].forEach(item=>objectStore.put(item));
-                }
-                resolve();
-              };
-              request.onerror=()=>reject(request.error);
-            }
-          }
-          
-          importPopup.classList.add('show');
-          let seconds=5;
-          countdown.textContent=seconds;
-          const timer=setInterval(()=>{
-            seconds--;
-            countdown.textContent=seconds;
-            if(seconds<=0){
-              clearInterval(timer);
-              window.close();
-            }
-          },1000);
-          
-        }catch(err){
-          alert(`Failed to load data: ${err.message}`);
+    
+    // Open game in modal - MAIN FIXED FUNCTION
+    async function openGame(game) {
+      console.log('Opening game:', game.name);
+      modalTitle.textContent = game.name || 'Game';
+      
+      // SCROLL FIX: Store scroll position and lock body
+      scrollPosition = window.scrollY;
+      document.body.style.top = `-${scrollPosition}px`;
+      document.body.classList.add('modal-open');
+      
+      // Show modal
+      modalBackdrop.classList.add('show');
+      gameLoader.classList.remove('hidden');
+      
+      // Process game URL
+      let gameUrl = game.url || '';
+      gameUrl = gameUrl.replace('{COVER_URL}', COVERS_BASE_URL).replace('{HTML_URL}', HTML_BASE_URL);
+      currentGameUrl = gameUrl;
+      
+      console.log('Game URL:', gameUrl);
+      
+      // Clear iframe first
+      gameFrame.src = 'about:blank';
+      
+      // Set iframe permissions - CRITICAL for Chrome
+      gameFrame.sandbox = "allow-scripts allow-same-origin allow-popups allow-forms allow-pointer-lock allow-modals";
+      gameFrame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; gamepad; fullscreen";
+      gameFrame.allowFullscreen = true;
+      
+      // Always use srcdoc for Chrome to force HTML rendering, but inject fixes first
+      loadWithSrcdoc(gameUrl);
+      
+      // Set timeout to hide loader
+      setTimeout(() => {
+        if (!gameLoader.classList.contains('hidden')) {
+          gameLoader.classList.add('hidden');
         }
-      };
-      reader.readAsText(file);
+      }, 8000);
     }
-
-    exportBtn.addEventListener('click',saveData);
-    importBtn.addEventListener('click',()=>importFile.click());
-    importFile.addEventListener('change',loadData);
-
-    function debounce(fn,wait){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn.apply(this,a),wait)}}
-
-    fetchZones();
+    
+    // Load with srcdoc - This always treats content as HTML
+    async function loadWithSrcdoc(url) {
+      try {
+        const response = await fetch(url, { 
+          mode: 'cors',
+          cache: 'no-cache'
+        });
+        
+        const contentType = response.headers.get('content-type') || '';
+        let content = await response.text();
+        
+        console.log('Content-Type:', contentType);
+        console.log('Content preview:', content.substring(0, 200));
+        
+        // Check if this looks like HTML
+        const looksLikeHtml = isHtmlContent(content, url);
+        
+        if (looksLikeHtml) {
+          console.log('Content appears to be HTML, using srcdoc with Chrome fixes');
+          
+          // Inject Chrome-specific fixes before setting srcdoc
+          content = injectChromeFixes(content);
+          
+          // Use srcdoc to force browser to treat as HTML
+          gameFrame.srcdoc = content;
+          
+          gameFrame.onload = () => {
+            console.log('Game loaded via srcdoc with fixes');
+            setTimeout(() => {
+              gameLoader.classList.add('hidden');
+            }, 500);
+          };
+          
+          gameFrame.onerror = () => {
+            console.log('srcdoc load failed, trying direct load');
+            loadDirect(url);
+          };
+        } else {
+          console.log('Content does not appear to be HTML, trying direct load');
+          loadDirect(url);
+        }
+        
+      } catch (error) {
+        console.log('Fetch failed, trying direct load:', error);
+        loadDirect(url);
+      }
+    }
+    
+    // Direct load fallback
+    function loadDirect(url) {
+      console.log('Loading game directly:', url);
+      
+      // Clear srcdoc first
+      gameFrame.srcdoc = '';
+      
+      // Add cache busting
+      const timestampedUrl = url + (url.includes('?') ? '&' : '?') + 't=' + Date.now();
+      gameFrame.src = timestampedUrl;
+      
+      gameFrame.onload = () => {
+        console.log('Game loaded directly');
+        setTimeout(() => {
+          gameLoader.classList.add('hidden');
+        }, 500);
+      };
+      
+      gameFrame.onerror = () => {
+        console.log('Direct load failed');
+        showLoadError();
+      };
+    }
+    
+    // Show load error
+    function showLoadError() {
+      gameLoader.classList.add('hidden');
+      
+      gameLoader.innerHTML = `
+        <div style="text-align: center; padding: 20px; max-width: 500px;">
+          <div style="color: #ff4757; margin-bottom: 15px; font-size: 18px;">Game Failed to Load</div>
+          <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 14px; line-height: 1.5;">
+            This game couldn't be loaded. Please try again or use a different browser.
+          </p>
+          <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px;">
+            <button onclick="closeGameModal()" class="btn" style="background: #ff4757;">
+              Close
+            </button>
+          </div>
+        </div>
+      `;
+      gameLoader.classList.remove('hidden');
+    }
+    
+    // Close game modal
+    function closeGameModal() {
+      modalBackdrop.classList.remove('show');
+      
+      // Restore scroll position
+      document.body.classList.remove('modal-open');
+      document.body.style.top = '';
+      window.scrollTo(0, scrollPosition);
+      
+      // Clear iframe and reset srcdoc
+      gameFrame.src = 'about:blank';
+      gameFrame.srcdoc = '';
+      
+      // Reset loader
+      gameLoader.classList.add('hidden');
+      gameLoader.innerHTML = `
+        <div class="game-loader-spinner"></div>
+        <div class="game-loader-text">Loading...</div>
+      `;
+      
+      // Exit fullscreen if active
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    }
+    
+    // Toggle fullscreen for the entire site
+    function toggleFullscreenMode() {
+      const element = document.documentElement;
+      
+      if (!document.fullscreenElement) {
+        element.requestFullscreen().catch(err => {
+          console.error('Fullscreen error:', err);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+    
+    // Toggle fullscreen for game modal - IMPROVED
+    function toggleGameFullscreen() {
+      const container = document.querySelector('.iframe-container');
+      
+      if (!document.fullscreenElement) {
+        container.requestFullscreen().catch(err => {
+          console.error('Fullscreen error:', err);
+          // Fallback to modal fullscreen
+          document.querySelector('.modal').requestFullscreen();
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+    
+    // Debounce utility function
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
   </script>
 </body>
 </html>
